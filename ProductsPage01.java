@@ -11,11 +11,15 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 public class ProductsPage01 {
 
-    public WebDriver homepage() throws Exception {
+    private FluentWait<WebDriver> wait;
+	private JavascriptExecutor js;
+
+	public WebDriver homepage() throws Exception {
 
         XpresswayLoginPage loginPage = new XpresswayLoginPage();
         WebDriver driver = loginPage.login();
@@ -461,7 +465,209 @@ public class ProductsPage01 {
         }
 
         System.out.println("----------------------------------------------------");
+        
+   /////////////////////////////////////////////////////////////////////////////////////////////////
+   
+          // LOAN ON CREDIT CARD
+        
+        ArrayList<String> loanTabs = null;
 
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(25));
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+
+            boolean isConsentSuccess = true;
+
+            // 🔹 STEP 1: Click Offer
+            WebElement loanOnCC = driver.findElement(By.xpath("//p[contains(text(),'Loan on Credit Card')]"));
+            new Actions(driver).moveToElement(loanOnCC).perform();
+            Thread.sleep(2000);
+
+            driver.findElement(By.xpath("//p[contains(text(),'Loan on Credit Card')]/following::a[1]")).click();
+            System.out.println("Clicked on Loan on Credit Card");
+
+            Thread.sleep(8000);
+
+            // 🔹 STEP 2: Switch Tab
+            loanTabs = new ArrayList<>(driver.getWindowHandles());
+            if (loanTabs.size() > 1) {
+                driver.switchTo().window(loanTabs.get(1));
+                Thread.sleep(3000);
+            } else {
+                System.out.println("New tab not opened :: FAIL");
+            }
+
+            Thread.sleep(5000);
+
+            // 🔹 STEP 3: SSO Validation
+
+            boolean isSSOValid = false;
+
+            try {
+                WebDriverWait waitSSO = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+                WebElement mobileField = waitSSO.until(ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//input[contains(@id,'guidetextbox') and @type='tel']")));
+
+                String mobileValue = mobileField.getAttribute("value");
+
+                if (mobileValue != null && mobileValue.length() == 10) {
+                    System.out.println("Loan on Credit Card SSO Validation :: PASS");
+                    isSSOValid = true;
+                } else {
+                    System.out.println("Loan on Credit Card SSO Validation :: FAIL");
+                }
+
+            } catch (Exception e) {
+                System.out.println("Loan on Credit Card SSO Validation :: FAIL (Field not found)");
+            }
+
+            // 🔥 STEP 4: HANDLE IFRAME (IMPORTANT)
+            boolean frameSwitched = false;
+
+            List<WebElement> frames = driver.findElements(By.tagName("iframe"));
+            for (int i = 0; i < frames.size(); i++) {
+                driver.switchTo().defaultContent();
+                driver.switchTo().frame(i);
+
+                if (driver.findElements(By.xpath("//input[@aria-label='CCDigit1']")).size() > 0) {
+                    System.out.println("Switched to correct iframe index: " + i);
+                    frameSwitched = true;
+                    break;
+                }
+            }
+
+            if (!frameSwitched) {
+                driver.switchTo().defaultContent();
+            //    System.out.println("No iframe, continuing in main DOM");
+            }
+
+            Thread.sleep(3000);
+
+            // 🔥 STEP 5: ENTER 4 DIGITS (FINAL FIX)
+            try {
+                WebElement d1 = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//input[@aria-label='CCDigit1']")));
+                WebElement d2 = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//input[@aria-label='CCDigit2']")));
+                WebElement d3 = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//input[@aria-label='CCDigit3']")));
+                WebElement d4 = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//input[@aria-label='CCDigit4']")));
+
+                d1.sendKeys("7");Thread.sleep(1000);
+                d2.sendKeys("9");Thread.sleep(1000);
+                d3.sendKeys("8");Thread.sleep(1000);
+                d4.sendKeys("2");Thread.sleep(1000);
+
+                System.out.println("Entered CC digits :: PASS");
+
+            } catch (Exception e) {
+                System.out.println("Entering CC digits :: FAIL");
+                isConsentSuccess = false;
+            }
+
+            Thread.sleep(3000);
+
+         // 🔥 IMPORTANT WAIT AFTER DIGITS (VERY IMPORTANT)
+            Thread.sleep(2000);
+
+            // 🔹 STEP 6: Checkbox (FIXED)
+            try {
+                WebElement checkbox = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//input[contains(@id,'guidecheckbox_copy')]")));
+
+                js.executeScript("arguments[0].scrollIntoView({block:'center'});", checkbox);
+                Thread.sleep(2000);
+
+                js.executeScript("arguments[0].click();", checkbox);
+                Thread.sleep(3000);
+
+                System.out.println("Checkbox clicked :: PASS");
+
+            } catch (Exception e) {
+                System.out.println("Checkbox click :: FAIL");
+                isConsentSuccess = false;
+            }
+
+            Thread.sleep(3000);
+
+            // 🔹 STEP 7: Go To Bottom (FIXED)
+            try {
+                WebElement goToBottom = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//p[text()='Go To Bottom']")));
+
+                js.executeScript("arguments[0].scrollIntoView({block:'center'});", goToBottom);
+                Thread.sleep(2000);
+
+                js.executeScript("arguments[0].click();", goToBottom);
+                Thread.sleep(3000);
+
+                System.out.println("Go To Bottom clicked :: PASS");
+
+            } catch (Exception e) {
+                System.out.println("Go To Bottom click :: FAIL");
+                isConsentSuccess = false;
+            }
+
+            Thread.sleep(3000);
+
+            // 🔹 STEP 8: I Agree (FIXED)
+            try {
+                WebElement agreeBtn = wait.until(ExpectedConditions.presenceOfElementLocated(
+                        By.xpath("//span[text()='I Agree']/ancestor::button")));
+
+                js.executeScript("arguments[0].scrollIntoView({block:'center'});", agreeBtn);
+                Thread.sleep(2000);
+
+                js.executeScript("arguments[0].click();", agreeBtn);
+                Thread.sleep(3000);
+
+                System.out.println("I Agree clicked :: PASS");
+
+            } catch (Exception e) {
+                System.out.println("I Agree click :: FAIL");
+                isConsentSuccess = false;
+            }
+            Thread.sleep(3000);
+
+            // 🔹 STEP 9: View Loan Eligibility
+            try {
+                WebElement viewEligibility = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//span[contains(text(),'View Loan Eligibility')]")));
+
+                js.executeScript("arguments[0].click();", viewEligibility); Thread.sleep(3000);
+                System.out.println("View Loan Eligibility clicked :: PASS");
+
+            } catch (Exception e) {
+                System.out.println("View Loan Eligibility click :: FAIL");
+                isConsentSuccess = false;
+            }
+
+            // 🔹 FINAL RESULT
+            if (isSSOValid && isConsentSuccess) {
+  //              System.out.println("Loan on Credit Card Flow :: PASS");
+            } else {
+        //        System.out.println("Loan on Credit Card Flow :: FAIL");
+            }
+
+        } catch (Exception e) {
+       //     System.out.println("Loan on Credit Card Offer :: FAIL");
+            e.printStackTrace();
+
+        } finally {
+            try {
+                if (loanTabs != null && loanTabs.size() > 1) {
+                    driver.close();
+                    driver.switchTo().window(loanTabs.get(0));
+                    Thread.sleep(4000);
+                }
+            } catch (Exception ex) {
+                System.out.println("Tab recovery failed");
+            }
+        }
+
+        System.out.println("----------------------------------------------------");
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
