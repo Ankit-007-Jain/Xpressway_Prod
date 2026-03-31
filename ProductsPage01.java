@@ -49,140 +49,87 @@ public class ProductsPage01 {
         ScreenshotUtil.takeScreenshot(driver, "ETB User");
         System.out.println("Personal Loan");
 
-        ///////////////////////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////////////////////////
         
      // PERSONAL LOAN
-    
-        ArrayList<String> tabs001 = null;
-
         try {
             WebElement heading03 = driver.findElement(By.xpath("//p[normalize-space()='Personal Loan']"));
+
             new Actions(driver).moveToElement(heading03).perform();
             Thread.sleep(2000);
 
             WebElement button001 = driver.findElement(
                     By.xpath("(//p[normalize-space()='Personal Loan'])[1]/following::a[1]"));
             button001.click();
+
             Thread.sleep(10000);
 
-            tabs001 = new ArrayList<>(driver.getWindowHandles());
+            ArrayList<String> tabs001 = new ArrayList<>(driver.getWindowHandles());
             driver.switchTo().window(tabs001.get(1));
 
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-            JavascriptExecutor js = (JavascriptExecutor) driver;
-            Actions actions = new Actions(driver);
+            String actualSSOUrl001 = driver.getCurrentUrl();
 
-            boolean isConsentFlowSuccess = true;
+            //Step 1: Check SSO URL
+            boolean isSSOUrlValid = actualSSOUrl001.contains("SSO_AUTHENTICATION_SUCCESS");
 
-            // 🔹 RADIO BUTTON
+            // Step 2: Consent Flow Validation
+            boolean isConsentFlowSuccess = false;
+
             try {
-                WebElement radio = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("pepselection-1")));
-                js.executeScript("arguments[0].click();", radio);
+                WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+
+                // Checkbox
+                WebElement checkbox = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.id("checkbox-609cf79d74")));
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", checkbox);
                 Thread.sleep(2000);
-                System.out.println("Radio button clicked");
+
+                // Scroll button
+                WebElement scrollBtn = wait.until(ExpectedConditions.elementToBeClickable(
+                        By.className("go-to-bottom-btn")));
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", scrollBtn);
+                Thread.sleep(2000);
+
+                // Continue flow (optional but good)
+                WebElement agreeBtn = driver.findElement(By.id("button-d780d15832"));
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", agreeBtn);
+                Thread.sleep(2000);
+
+                WebElement applyBtn = driver.findElement(By.id("button-287ab08488"));
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", applyBtn);
+
+                isConsentFlowSuccess = true;
+                System.out.println("Consent Flow:: Pass");
+
             } catch (Exception e) {
-                System.out.println("Radio button failed");
                 isConsentFlowSuccess = false;
+                System.out.println("Personal Loan Consent Flow :: FAIL");
             }
 
-            // 🔹 CHECKBOX (IMPORTANT FIX)
-            try {
-                WebElement checkbox = wait.until(ExpectedConditions.presenceOfElementLocated(
-                        By.id("checkbox-075d5fd88b")));
-
-                js.executeScript("arguments[0].scrollIntoView({block:'center'});", checkbox);
-                Thread.sleep(1000);
-
-                // Try normal click → fallback to JS → fallback to Actions
-                try {
-                    checkbox.click(); Thread.sleep(3000);
-                } catch (Exception ex) {
-                    js.executeScript("arguments[0].click();", checkbox);
-                }
-
-                System.out.println("Checkbox clicked");
-                Thread.sleep(3000);
-
-            } catch (Exception e) {
-                System.out.println("Checkbox failed");
-                isConsentFlowSuccess = false;
-            }
-
-            // 🔹 WAIT FOR MODAL (VERY IMPORTANT)
-            Thread.sleep(3000);
-
-            // 🔹 GO TO BOTTOM (FIXED)
-            try {
-                WebElement goToBottom = wait.until(ExpectedConditions.presenceOfElementLocated(
-                        By.xpath("//button[contains(@class,'go-to-bottom-btn')]")));
-
-                js.executeScript("arguments[0].scrollIntoView({block:'center'});", goToBottom);
-                Thread.sleep(1000);
-
-                js.executeScript("arguments[0].click();", goToBottom);
-                System.out.println("Go to Bottom clicked");
-                Thread.sleep(4000);
-
-            } catch (Exception e) {
-                System.out.println("Go to Bottom failed");
-                isConsentFlowSuccess = false;
-            }
-
-            // 🔹 I AGREE BUTTON (FIXED)
-            try {
-                WebElement agreeBtn = wait.until(ExpectedConditions.presenceOfElementLocated(
-                        By.id("button-4dbdf4975c")));
-
-                js.executeScript("arguments[0].scrollIntoView({block:'center'});", agreeBtn);
-                Thread.sleep(1000);
-
-                // Try multiple ways
-                try {
-                    agreeBtn.click(); Thread.sleep(3000);
-                } catch (Exception ex) {
-                    js.executeScript("arguments[0].click();", agreeBtn);
-                }
-
-                System.out.println("I Agree clicked");
-                Thread.sleep(4000);
-
-            } catch (Exception e) {
-                System.out.println("Agree failed");
-                isConsentFlowSuccess = false;
-            }
-
-            // 🔹 VIEW ELIGIBILITY (FIXED)
-            try {
-                WebElement viewBtn = wait.until(ExpectedConditions.presenceOfElementLocated(
-                        By.xpath("//button[contains(text(),'View Loan Eligibility')]")));
-
-                js.executeScript("arguments[0].scrollIntoView({block:'center'});", viewBtn);
-                Thread.sleep(1000);
-
-                js.executeScript("arguments[0].click();", viewBtn);
-                System.out.println("View Loan Eligibility clicked");
-                Thread.sleep(10000);
-
-            } catch (Exception e) {
-                System.out.println("View Eligibility failed");
-                isConsentFlowSuccess = false;
+            // Step 3: FINAL SSO RESULT
+            if (isSSOUrlValid && isConsentFlowSuccess) {
+                System.out.println("Personal Loan SSO Validation:: PASS");
+            } else {
+                System.out.println("Personal Loan SSO Validation:: FAIL");
             }
 
         } catch (Exception e) {
-            System.out.println("Personal Loan Flow FAILED");
+            System.out.println("Personal Loan Flow :: FAIL");
             e.printStackTrace();
-
         } finally {
+            // Always switch back (VERY IMPORTANT)
             try {
-                if (tabs001 != null && tabs001.size() > 1) {
+                ArrayList<String> tabs001 = new ArrayList<>(driver.getWindowHandles());
+                if (tabs001.size() > 1) {
                     driver.close();
                     driver.switchTo().window(tabs001.get(0));
                 }
+                Thread.sleep(2000);
             } catch (Exception ex) {
                 System.out.println("Tab recovery failed");
             }
         }
-        
+
         System.out.println("----------------------------------------------------");
         System.out.println("Fixed Deposit using funds from HDFC Bank");
         
@@ -378,7 +325,7 @@ public class ProductsPage01 {
             String url = driver.getCurrentUrl();
 
             // ✅ Step 1: SSO URL Check
-            boolean isSSOUrlValid1 = url.contains("SSO_AUTHENTICATION_SUCCESS");
+            boolean isSSOUrlValid = url.contains("SSO_AUTHENTICATION_SUCCESS");
 
             // ✅ Step 2: Consent Flow
             boolean isConsentSuccess = true;
@@ -398,19 +345,30 @@ public class ProductsPage01 {
 
                 boolean clicked = false;
 
+                Actions actions = new Actions(driver);
+
                 for (WebElement checkbox : checkboxes) {
                     if (checkbox.isDisplayed()) {
+
+                        // 🔥 Move to element (real user scroll)
+                        actions.moveToElement(checkbox).perform();
+                        Thread.sleep(1500);
+
+                        // Extra scroll (safety)
                         js.executeScript("arguments[0].scrollIntoView({block:'center'});", checkbox);
                         Thread.sleep(1000);
+
+                        // Click using JS (most stable)
                         js.executeScript("arguments[0].click();", checkbox);
-                        Thread.sleep(4000);
+                        Thread.sleep(3000);
+
                         clicked = true;
                         System.out.println("Checkbox clicked :: PASS");
                         break;
                     }
                 }
 
-                if (!clicked) throw new Exception();
+                if (!clicked) throw new Exception("Checkbox not found/displayed");
 
             } catch (Exception e) {
                 System.out.println("Checkbox not clickable :: FAIL");
@@ -534,8 +492,7 @@ public class ProductsPage01 {
             }
             
             
-            boolean isSSOUrlValid = false;
-			// ✅ FINAL RESULT
+            // ✅ FINAL RESULT
             if (isSSOUrlValid && isConsentSuccess) {
                 System.out.println("Credit Card Application SSO Validation :: PASS");
             } else {
@@ -663,10 +620,10 @@ public class ProductsPage01 {
                 isConsentSuccess = false;
             }
 
-            Thread.sleep(3000);
+            Thread.sleep(1000);
 
          // 🔥 IMPORTANT WAIT AFTER DIGITS (VERY IMPORTANT)
-            Thread.sleep(2000);
+            Thread.sleep(1000);
 
             // 🔹 STEP 6: Checkbox (FIXED)
             try {
@@ -728,17 +685,6 @@ public class ProductsPage01 {
             Thread.sleep(3000);
 
             // 🔹 STEP 9: View Loan Eligibility
-            try {
-                WebElement viewEligibility = wait.until(ExpectedConditions.elementToBeClickable(
-                        By.xpath("//span[contains(text(),'View Loan Eligibility')]")));
-
-                js.executeScript("arguments[0].click();", viewEligibility); 
-                System.out.println("View Loan Eligibility clicked :: PASS");
-                Thread.sleep(18000);
-            } catch (Exception e) {
-                System.out.println("View Loan Eligibility click :: FAIL");
-                isConsentSuccess = false;
-            }
             
             try {
                 WebElement viewEligibility = wait.until(ExpectedConditions.elementToBeClickable(
@@ -746,16 +692,16 @@ public class ProductsPage01 {
 
                 js.executeScript("arguments[0].click();", viewEligibility);
                 System.out.println("View Loan Eligibility clicked :: PASS");
-
+                Thread.sleep(27000);
                 // ✅ Validate next page element (IMPORTANT)
                 WebDriverWait waitNext = new WebDriverWait(driver, Duration.ofSeconds(15));
                 waitNext.until(ExpectedConditions.presenceOfElementLocated(
                         By.xpath("//span[text()='Identify Yourself >>']")));
 
-                System.out.println("Navigation to next step :: SUCCESS");
+              //  System.out.println("Navigation to next step :: SUCCESS");
 
             } catch (Exception e) {
-               // System.out.println("View Loan Eligibility click :: FAIL");
+                System.out.println("OTP Screen :: FAIL");
                 isConsentSuccess = false;
             }
             //Clicking Identify Yourself
@@ -766,6 +712,7 @@ public class ProductsPage01 {
                 if (button.isEnabled()) {
 
                     js.executeScript("arguments[0].click();", button);
+                    Thread.sleep(15000);
                     System.out.println("Identify Yourself Button clicked :: PASS");
 
                 } else {
@@ -838,7 +785,6 @@ public class ProductsPage01 {
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        // FASTag
         try {
             WebElement fastTag = driver.findElement(By.xpath("//p[contains(text(),'FASTag')]"));
 
@@ -856,6 +802,18 @@ public class ProductsPage01 {
 
                 System.out.println("FASTag Navigation:: Pass");
 
+                //SCENARIO: URL Validation - LGCODE, LCCODE
+                String currentURL = driver.getCurrentUrl();
+
+                if (currentURL.contains("LCCode=7738") &&
+                    currentURL.contains("LGCode=ANKIT15") &&
+                    currentURL.contains("channelsource=AX&xjid")) {
+
+                    System.out.println("FASTag URL contains LGCODE, LCCODE and Channelsource:: Pass");
+                } else {
+                    System.out.println("FASTag URL contains LGCODE, LCCODE and Channelsource:: Fail");
+                }
+
                 driver.close();
                 driver.switchTo().window(anotherTab.get(0));
             }
@@ -863,6 +821,7 @@ public class ProductsPage01 {
         } catch (Exception e) {
             System.out.println("FASTag offer not visible :: FAIL");
         }
+        
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, 0)");
