@@ -645,8 +645,6 @@ public class ProductsPage01 {
    /////////////////////////////////////////////////////////////////////////////////////////////////
    
           // LOAN ON CREDIT CARD
-
-        
         ArrayList<String> loanTabs = null;
 
         try {
@@ -735,7 +733,7 @@ public class ProductsPage01 {
                 d1.sendKeys("7");Thread.sleep(1000);
                 d2.sendKeys("9");Thread.sleep(1000);
                 d3.sendKeys("8");Thread.sleep(1000);
-                d4.sendKeys("2");Thread.sleep(1000);
+                d4.sendKeys("2");Thread.sleep(2000);
 
                 System.out.println("Entered CC digits :: PASS");
 
@@ -744,7 +742,6 @@ public class ProductsPage01 {
                 isConsentSuccess = false;
             }
 
-            Thread.sleep(1000);
 
          // 🔥 IMPORTANT WAIT AFTER DIGITS (VERY IMPORTANT)
             Thread.sleep(1000);
@@ -871,7 +868,6 @@ public class ProductsPage01 {
                 System.out.println("Tab recovery failed");
             }
         }
-
         System.out.println("----------------------------------------------------");
         
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -930,7 +926,7 @@ public class ProductsPage01 {
                 String currentURL = driver.getCurrentUrl();
 
                 if (currentURL.contains("LCCode=7738") &&
-                    currentURL.contains("LGCode=AYUS12") &&
+                    currentURL.contains("LGCode=ANKIT15") &&
                     currentURL.contains("channelsource=AX&xjid")) {
 
                     System.out.println("FASTag URL contains LGCODE, LCCODE and Channelsource:: Pass");
